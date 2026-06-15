@@ -1,5 +1,0 @@
-<apex:page showHeader="false" sidebar="flase" controller="SloController" action="{!redirect}">
-    <h1>
-        Logging out ...
-    </h1>
-</apex:page>
