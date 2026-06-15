@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>TechStack_mp__c</fullName>
+    <label>Tech Stack</label>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>MultiselectPicklist</type>
+    <valueSet>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Node.js</fullName>
+                <default>false</default>
+                <label>Node.js</label>
+            </value>
+            <value>
+                <fullName>Express.js</fullName>
+                <default>false</default>
+                <label>Express.js</label>
+            </value>
+            <value>
+                <fullName>Salesforce Apex</fullName>
+                <default>false</default>
+                <label>Salesforce Apex</label>
+            </value>
+            <value>
+                <fullName>Salesforce LWC</fullName>
+                <default>false</default>
+                <label>Salesforce LWC</label>
+            </value>
+            <value>
+                <fullName>Salesforce REST API</fullName>
+                <default>false</default>
+                <label>Salesforce REST API</label>
+            </value>
+            <value>
+                <fullName>JavaScript (ES6+)</fullName>
+                <default>false</default>
+                <label>JavaScript (ES6+)</label>
+            </value>
+            <value>
+                <fullName>HTML5</fullName>
+                <default>false</default>
+                <label>HTML5</label>
+            </value>
+            <value>
+                <fullName>CSS3</fullName>
+                <default>false</default>
+                <label>CSS3</label>
+            </value>
+            <value>
+                <fullName>MongoDB</fullName>
+                <default>false</default>
+                <label>MongoDB</label>
+            </value>
+            <value>
+                <fullName>PostgreSQL</fullName>
+                <default>false</default>
+                <label>PostgreSQL</label>
+            </value>
+            <value>
+                <fullName>Git &amp; GitHub</fullName>
+                <default>false</default>
+                <label>Git &amp; GitHub</label>
+            </value>
+            <value>
+                <fullName>Heroku</fullName>
+                <default>false</default>
+                <label>Heroku</label>
+            </value>
+            <value>
+                <fullName>Render.com</fullName>
+                <default>false</default>
+                <label>Render.com</label>
+            </value>
+            <value>
+                <fullName>OAuth 2.0</fullName>
+                <default>false</default>
+                <label>OAuth 2.0</label>
+            </value>
+            <value>
+                <fullName>Mocha &amp; Chai</fullName>
+                <default>false</default>
+                <label>Mocha &amp; Chai</label>
+            </value>
+            <value>
+                <fullName>Webpack</fullName>
+                <default>false</default>
+                <label>Webpack</label>
+            </value>
+            <value>
+                <fullName>Jenkins (CI/CD)</fullName>
+                <default>false</default>
+                <label>Jenkins (CI/CD)</label>
+            </value>
+            <value>
+                <fullName>Docker</fullName>
+                <default>false</default>
+                <label>Docker</label>
+            </value>
+            <value>
+                <fullName>Salesforce CLI</fullName>
+                <default>false</default>
+                <label>Salesforce CLI</label>
+            </value>
+            <value>
+                <fullName>Visual Studio Code</fullName>
+                <default>false</default>
+                <label>Visual Studio Code</label>
+            </value>
+            <value>
+                <fullName>Salesforce Flows</fullName>
+                <default>false</default>
+                <label>Salesforce Flows</label>
+            </value>
+            <value>
+                <fullName>Process Builder</fullName>
+                <default>false</default>
+                <label>Process Builder</label>
+            </value>
+            <value>
+                <fullName>Email Alerts</fullName>
+                <default>false</default>
+                <label>Email Alerts</label>
+            </value>
+            <value>
+                <fullName>Objects &amp; Fields</fullName>
+                <default>false</default>
+                <label>Objects &amp; Fields</label>
+            </value>
+            <value>
+                <fullName>Validation Rules</fullName>
+                <default>false</default>
+                <label>Validation Rules</label>
+            </value>
+            <value>
+                <fullName>Formula Fields</fullName>
+                <default>false</default>
+                <label>Formula Fields</label>
+            </value>
+            <value>
+                <fullName>Managed Packages</fullName>
+                <default>false</default>
+                <label>Managed Packages</label>
+            </value>
+            <value>
+                <fullName>Reports &amp; Dashboards</fullName>
+                <default>false</default>
+                <label>Reports &amp; Dashboards</label>
+            </value>
+            <value>
+                <fullName>SBQQ CPQ</fullName>
+                <default>false</default>
+                <label>SBQQ CPQ</label>
+            </value>
+            <value>
+                <fullName>React</fullName>
+                <default>false</default>
+                <label>React</label>
+            </value>
+            <value>
+                <fullName>JAVA</fullName>
+                <default>false</default>
+                <label>JAVA</label>
+            </value>
+            <value>
+                <fullName>Spring Boot</fullName>
+                <default>false</default>
+                <label>Spring Boot</label>
+            </value>
+            <value>
+                <fullName>Thymeleaf</fullName>
+                <default>false</default>
+                <label>Thymeleaf</label>
+            </value>
+            <value>
+                <fullName>Ngrok</fullName>
+                <default>false</default>
+                <label>Ngrok</label>
+            </value>
+            <value>
+                <fullName>JPA</fullName>
+                <default>false</default>
+                <label>JPA</label>
+            </value>
+            <value>
+                <fullName>Zoho Desk</fullName>
+                <default>false</default>
+                <label>Zoho Desk</label>
+            </value>
+            <value>
+                <fullName>Zoho Deluge</fullName>
+                <default>false</default>
+                <label>Zoho Deluge</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+    <visibleLines>4</visibleLines>
+</CustomField>

@@ -1,0 +1,48 @@
+<template>
+    <lightning-card title={labels.CreateNew} icon-name="custom:custom63" class="slds-p-around_medium">
+        <template lwc:if={isEdit}>
+            <lightning-button-group slot="actions">
+                <lightning-button label={labels.Save} onclick={handleSave}></lightning-button>
+                <lightning-button label={labels.Cancel} onclick={handleCancel}></lightning-button>
+                <lightning-button label={labels.Delete} onclick={handleDelete} variant="destructive-text"></lightning-button>
+            </lightning-button-group>
+            <div class="slds-m-around_medium">
+                <lightning-record-edit-form object-api-name="Resource__c">
+                    <lightning-messages></lightning-messages>
+                    <lightning-input-field field-name="Name" value={resource.Name}></lightning-input-field>
+                    <lightning-input-field field-name="ContactEmail__c"
+                        value={resource.ContactEmail__c}></lightning-input-field>
+                    <lightning-input class="slds-p-left_xx-small" type="checkbox" label={labels.RequireAPIKey}
+                        oninput={handleAPIKeyCheckbox} checked={isAPIKeyRequired}></lightning-input>
+                    <lightning-input-field field-name="APIKey__c" value={apiKey}
+                        disabled={apiKeyDisabled}></lightning-input-field>
+                    <lightning-input-field field-name="Description__c"
+                        value={resource.Description__c}></lightning-input-field>
+                </lightning-record-edit-form>
+            </div>
+        </template>
+        <template lwc:else>
+            <lightning-button-group slot="actions">
+                <lightning-button label={labels.Delete} onclick={handleDelete} variant="destructive-text"></lightning-button>
+                <lightning-button label={labels.Edit} variant="brand-outline" onclick={handleEdit}></lightning-button>
+            </lightning-button-group>
+            <template lwc:if={fileds}>
+                <div class="slds-m-around_medium">
+                    <p><strong>{fileds.Name.label}: </strong>{resource.Name}</p>
+                    <p><strong>{fileds.ContactEmail__c.label}: </strong>{resource.ContactEmail__c}</p>
+                    <p><strong>{fileds.Description__c.label}: </strong>{resource.Description__c}</p>
+                    <p><strong>{fileds.APIKey__c.label}: </strong>{resource.APIKey__c}</p>
+                    <p><strong>{fileds.RequestURL__c.label}: </strong><a href={resource.RequestURL__c} target="_blank">{resource.RequestURL__c}</a></p>
+                </div>
+            </template>
+        </template>
+    </lightning-card>
+    <div class="slds-m-vertical_medium">
+        <div class="slds-grid slds-grid_align-end slds-m-vertical_small">
+            <lightning-button label={labels.NewPath} onclick={handleNewPath} variant="brand-outline" class="slds-col"></lightning-button>
+        </div>
+        <template for:each={resource.Paths__r} for:item="path">
+            <c-mock-a-p-i-path-card key={path.Id} path={path} ondelete={handlePathDelete} onupdate={handleUpdatePath}></c-mock-a-p-i-path-card>
+        </template>
+    </div>
+</template>

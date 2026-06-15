@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>StatusCode__c</fullName>
+    <label>Status Code</label>
+    <required>true</required>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>200</fullName>
+                <default>true</default>
+                <label>200 OK</label>
+            </value>
+            <value>
+                <fullName>201</fullName>
+                <default>false</default>
+                <label>201 CREATED</label>
+            </value>
+            <value>
+                <fullName>202</fullName>
+                <default>false</default>
+                <label>202 ACCEPTED</label>
+            </value>
+            <value>
+                <fullName>204</fullName>
+                <default>false</default>
+                <label>204 NO_CONTENT</label>
+            </value>
+            <value>
+                <fullName>206</fullName>
+                <default>false</default>
+                <label>206 PARTIAL_CONTENT</label>
+            </value>
+            <value>
+                <fullName>300</fullName>
+                <default>false</default>
+                <label>300 MULTIPLE_CHOICES</label>
+            </value>
+            <value>
+                <fullName>301</fullName>
+                <default>false</default>
+                <label>301 MOVED_PERMANENTLY</label>
+            </value>
+            <value>
+                <fullName>302</fullName>
+                <default>false</default>
+                <label>302 FOUND</label>
+            </value>
+            <value>
+                <fullName>304</fullName>
+                <default>false</default>
+                <label>304 NOT_MODIFIED</label>
+            </value>
+            <value>
+                <fullName>400</fullName>
+                <default>false</default>
+                <label>400 BAD_REQUEST</label>
+            </value>
+            <value>
+                <fullName>401</fullName>
+                <default>false</default>
+                <label>401 UNAUTHORIZED</label>
+            </value>
+            <value>
+                <fullName>403</fullName>
+                <default>false</default>
+                <label>403 FORBIDDEN</label>
+            </value>
+            <value>
+                <fullName>404</fullName>
+                <default>false</default>
+                <label>404 NOT_FOUND</label>
+            </value>
+            <value>
+                <fullName>405</fullName>
+                <default>false</default>
+                <label>405 METHOD_NOT_ALLOWED</label>
+            </value>
+            <value>
+                <fullName>406</fullName>
+                <default>false</default>
+                <label>406 NOT_ACCEPTABLE</label>
+            </value>
+            <value>
+                <fullName>409</fullName>
+                <default>false</default>
+                <label>409 CONFLICT</label>
+            </value>
+            <value>
+                <fullName>410</fullName>
+                <default>false</default>
+                <label>410 GONE</label>
+            </value>
+            <value>
+                <fullName>412</fullName>
+                <default>false</default>
+                <label>412 PRECONDITION_FAILED</label>
+            </value>
+            <value>
+                <fullName>413</fullName>
+                <default>false</default>
+                <label>413 REQUEST_ENTITY_TOO_LARGE</label>
+            </value>
+            <value>
+                <fullName>414</fullName>
+                <default>false</default>
+                <label>414 REQUEST_URI_TOO_LARGE</label>
+            </value>
+            <value>
+                <fullName>415</fullName>
+                <default>false</default>
+                <label>415 UNSUPPORTED_MEDIA_TYPE</label>
+            </value>
+            <value>
+                <fullName>417</fullName>
+                <default>false</default>
+                <label>417 EXPECTATION_FAILED</label>
+            </value>
+            <value>
+                <fullName>500</fullName>
+                <default>false</default>
+                <label>500 INTERNAL_SERVER_ERROR</label>
+            </value>
+            <value>
+                <fullName>503</fullName>
+                <default>false</default>
+                <label>503 SERVER_UNAVAILABLE</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

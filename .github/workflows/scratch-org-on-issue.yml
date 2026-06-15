@@ -1,0 +1,146 @@
+name: Scratch Org on Issue
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: scratch-org-${{ github.event.issue.number }}
+  cancel-in-progress: true
+
+jobs:
+  scratch-org-deploy:
+    runs-on: ubuntu-latest
+    env:
+      SF_CLIENT_ID: ${{ secrets.SF_CLIENT_ID }}
+      SF_CLIENT_SECRET: ${{ secrets.SF_CLIENT_SECRET }}
+      SF_LOGIN_URL: ${{ secrets.SF_LOGIN_URL }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Salesforce CLI
+        run: npm install -g @salesforce/cli
+
+      - name: Authenticate to Dev Hub (Client Credentials)
+        run: |
+          if [ -z "$SF_CLIENT_ID" ] || [ -z "$SF_CLIENT_SECRET" ]; then
+            echo "SF_CLIENT_ID and SF_CLIENT_SECRET repository secrets are required."
+            exit 1
+          fi
+
+          LOGIN_URL="${SF_LOGIN_URL:-https://login.salesforce.com}"
+
+          RESPONSE=$(curl -sS -X POST "${LOGIN_URL}/services/oauth2/token" \
+            -H "Content-Type: application/x-www-form-urlencoded" \
+            --data-urlencode "grant_type=client_credentials" \
+            --data-urlencode "client_id=${SF_CLIENT_ID}" \
+            --data-urlencode "client_secret=${SF_CLIENT_SECRET}")
+
+          if echo "$RESPONSE" | jq -e '.error' > /dev/null 2>&1; then
+            echo "Client credentials authentication failed:"
+            echo "$RESPONSE" | jq .
+            exit 1
+          fi
+
+          ACCESS_TOKEN=$(echo "$RESPONSE" | jq -r '.access_token')
+          INSTANCE_URL=$(echo "$RESPONSE" | jq -r '.instance_url')
+
+          if [ -z "$ACCESS_TOKEN" ] || [ "$ACCESS_TOKEN" = "null" ]; then
+            echo "No access token returned from Salesforce."
+            exit 1
+          fi
+
+          export SF_ACCESS_TOKEN="$ACCESS_TOKEN"
+
+          sf org login access-token \
+            --instance-url "$INSTANCE_URL" \
+            --alias dev-hub \
+            --set-default-dev-hub \
+            --no-prompt
+
+      - name: Create scratch org
+        id: scratch
+        run: |
+          ALIAS="issue-${{ github.event.issue.number }}-scratch"
+
+          sf org create scratch \
+            --definition-file config/project-scratch-def.json \
+            --alias "$ALIAS" \
+            --duration-days 1 \
+            --set-default \
+            --wait 20
+
+          ORG_INFO=$(sf org display --target-org "$ALIAS" --json)
+
+          echo "alias=$ALIAS" >> "$GITHUB_OUTPUT"
+          echo "username=$(echo "$ORG_INFO" | jq -r '.result.username')" >> "$GITHUB_OUTPUT"
+          echo "instance_url=$(echo "$ORG_INFO" | jq -r '.result.instanceUrl')" >> "$GITHUB_OUTPUT"
+          echo "org_id=$(echo "$ORG_INFO" | jq -r '.result.id')" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy source to scratch org
+        run: |
+          if [ ! -d force-app ]; then
+            echo "No force-app directory found; skipping deploy."
+            exit 0
+          fi
+
+          if [ -z "$(find force-app -type f ! -name '.gitkeep' 2>/dev/null | head -1)" ]; then
+            echo "force-app is empty; skipping deploy."
+            exit 0
+          fi
+
+          sf project deploy start \
+            --source-dir force-app \
+            --target-org "${{ steps.scratch.outputs.alias }}" \
+            --test-level NoTestRun \
+            --wait 30
+
+      - name: Comment on issue with scratch org details
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = [
+              '## Scratch org created and deployed',
+              '',
+              'A scratch org was provisioned for this issue and project source was deployed.',
+              '',
+              '| Field | Value |',
+              '| --- | --- |',
+              `| Alias | \`${{ steps.scratch.outputs.alias }}\` |`,
+              `| Username | \`${{ steps.scratch.outputs.username }}\` |`,
+              `| Instance URL | ${{ steps.scratch.outputs.instance_url }} |`,
+              `| Org ID | \`${{ steps.scratch.outputs.org_id }}\` |`,
+              '',
+              '> Scratch org expires in 1 day.'
+            ].join('\n');
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body
+            });
+
+      - name: Comment on issue when workflow fails
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: 'Scratch org creation or deployment failed. Check the [workflow run](' + context.payload.repository.html_url + '/actions/runs/' + context.runId + ') for details.'
+            });

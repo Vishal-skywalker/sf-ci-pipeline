@@ -1,0 +1,21 @@
+<template>
+    <lightning-card title={labels.NoResourceTitle} icon-name="custom:custom63">
+        <div class="slds-m-vertical_medium">
+            <div class="slds-align_absolute-center slds-m-bottom_small">
+                <lightning-button variant="brand" label={labels.CreateNew} onclick={handleNewMockAPIResource}></lightning-button>
+            </div>
+            <div class="slds-align_absolute-center slds-m-vertical_small">{labels.OREnterEmail}</div>
+            <div class="slds-grid slds-align_absolute-center slds-m-vertical_small slds-gutters_small">
+                <div class="slds-col slds-size_5-of-6">
+                    <input class="slds-input" type="email" oninput={handleEmailChange} placeholder={labels.Email}></input>
+                </div>
+                <div class="slds-col slds-size_1-of-6">
+                    <lightning-button variant="brand" label={labels.Lookup} onclick={findMockAPIResource}></lightning-button>
+                </div>
+            </div>
+        </div>
+    </lightning-card>
+    <template for:each={resourceList} for:item="r">
+        <c-mock-a-p-i-resource-card key={r.Id} resource={r}></c-mock-a-p-i-resource-card>
+    </template>
+</template>

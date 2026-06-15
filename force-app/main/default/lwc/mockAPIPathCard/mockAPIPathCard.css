@@ -1,0 +1,15 @@
+.GET {
+    color: green;
+}
+.DELETE {
+    color: red;
+}
+.POST {
+    color: blue;
+}
+.PUT {
+    color: orange;
+}
+.PATCH {
+    color: purple;
+}

@@ -1,0 +1,28 @@
+<template>
+    <div class="slds-m-vertical_x-small">
+        <lightning-card class="slds-m-around_small">
+            <div slot="title" class="slds-text-heading_medium">
+                <span class={path.Method__c}>{path.Method__c} </span>
+                <a onclick={copyPath}> /{path.Path__c}</a>
+            </div>
+            <lightning-button-group slot="actions" >
+                <lightning-button label={labels.Update} onclick={handleUpdate}></lightning-button>
+                <lightning-button label={labels.Delete} variant="destructive-text" onclick={handleDelete}></lightning-button>
+            </lightning-button-group>
+            <div class="slds-m-around_small">
+                <lightning-record-edit-form object-api-name="Path__c" density="comfy" class="slds-m-around_small">
+                    <lightning-messages></lightning-messages>
+                    <div class="slds-grid slds-wrap slds-gutters">
+                        <lightning-input-field class="slds-col slds-size_1-of-2" field-name="Path__c" value={path.Path__c}></lightning-input-field>
+                        <lightning-input-field class="slds-col slds-size_1-of-2" field-name="Method__c" value={path.Method__c}></lightning-input-field>
+                    </div>
+                    <div class="slds-grid slds-wrap slds-gutters">
+                        <lightning-input-field class="slds-col slds-size_1-of-2" field-name="StatusCode__c" value={path.StatusCode__c}></lightning-input-field>
+                        <lightning-input-field class="slds-col slds-size_1-of-2" field-name="ContentType__c" value={path.ContentType__c}></lightning-input-field>
+                    </div>
+                    <lightning-input-field field-name="Body__c" value={path.Body__c}></lightning-input-field>
+                </lightning-record-edit-form>
+            </div>
+        </lightning-card>
+    </div>
+</template>
