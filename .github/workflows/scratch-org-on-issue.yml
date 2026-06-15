@@ -78,14 +78,27 @@ jobs:
           sf org create scratch \
             --definition-file config/project-scratch-def.json \
             --alias "$ALIAS" \
-            --duration-days 1 \
+            --duration-days 30 \
             --set-default \
             --wait 20
 
           ORG_INFO=$(sf org display --target-org "$ALIAS" --json)
+          USERNAME=$(echo "$ORG_INFO" | jq -r '.result.username')
+
+          PASSWORD=$(sf org generate password \
+            --target-org "$ALIAS" \
+            --length 12 \
+            --complexity 5 \
+            --json | jq -r 'if (.result | type) == "array" then .result[0].password else .result.password end')
+
+          if [ -z "$PASSWORD" ] || [ "$PASSWORD" = "null" ]; then
+            echo "Failed to generate scratch org password."
+            exit 1
+          fi
 
           echo "alias=$ALIAS" >> "$GITHUB_OUTPUT"
-          echo "username=$(echo "$ORG_INFO" | jq -r '.result.username')" >> "$GITHUB_OUTPUT"
+          echo "username=$USERNAME" >> "$GITHUB_OUTPUT"
+          echo "password=$PASSWORD" >> "$GITHUB_OUTPUT"
           echo "instance_url=$(echo "$ORG_INFO" | jq -r '.result.instanceUrl')" >> "$GITHUB_OUTPUT"
           echo "org_id=$(echo "$ORG_INFO" | jq -r '.result.id')" >> "$GITHUB_OUTPUT"
 
@@ -121,10 +134,11 @@ jobs:
               '| --- | --- |',
               `| Alias | \`${{ steps.scratch.outputs.alias }}\` |`,
               `| Username | \`${{ steps.scratch.outputs.username }}\` |`,
+              `| Password | \`${{ steps.scratch.outputs.password }}\` |`,
               `| Instance URL | ${{ steps.scratch.outputs.instance_url }} |`,
               `| Org ID | \`${{ steps.scratch.outputs.org_id }}\` |`,
               '',
-              '> Scratch org expires in 1 day.'
+              '> Scratch org expires in 30 days.'
             ].join('\n');
 
             await github.rest.issues.createComment({
