@@ -1,13 +1,33 @@
 {
-  "orgName": "ca company",
+  "orgName": "ci-pip",
   "edition": "Developer",
-  "features": ["EnableSetPasswordInApi"],
+  "features": [
+    "EnableSetPasswordInApi",
+    "Communities",
+    "Sites",
+    "SalesforceIdentityForCommunities"
+  ],
   "settings": {
     "lightningExperienceSettings": {
       "enableS1DesktopEnabled": true
     },
     "mobileSettings": {
       "enableS1EncryptedStoragePref2": false
+    },
+    "communitiesSettings": {
+      "enableNetworksEnabled": true
+    },
+    "experienceBundleSettings": {
+      "enableExperienceBundleMetadata": true
+    }
+  },
+  "objectSettings": {
+    "account": {
+      "sharingModel": "readWrite",
+      "defaultRecordType": "employer"
+    },
+    "contact": {
+      "sharingModel": "controlledByParent"
     }
   }
 }

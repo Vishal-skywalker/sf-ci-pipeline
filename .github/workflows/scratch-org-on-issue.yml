@@ -75,6 +75,10 @@ jobs:
         run: |
           ALIAS="issue-${{ github.event.issue.number }}-scratch"
 
+          # Keep Account defaultRecordType casing aligned with source (Employer, School, None).
+          # See https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_scratch_orgs_def_file.htm
+          sf config set org-capitalize-record-types=true
+
           sf org create scratch \
             --definition-file config/project-scratch-def.json \
             --alias "$ALIAS" \
