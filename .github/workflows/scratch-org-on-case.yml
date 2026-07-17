@@ -175,6 +175,25 @@ jobs:
 
           echo "Case comment created: $(echo "$RESPONSE" | jq -r '.id')"
 
+          CLOSE_PAYLOAD='{"Status":"Closed"}'
+
+          CLOSE_RESPONSE=$(curl -sS -w "\n%{http_code}" -X PATCH \
+            "${SF_INSTANCE_URL}/services/data/v64.0/sobjects/Case/${CASE_ID}" \
+            -H "Authorization: Bearer ${SF_ACCESS_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "$CLOSE_PAYLOAD")
+
+          CLOSE_HTTP_CODE=$(echo "$CLOSE_RESPONSE" | tail -n 1)
+          CLOSE_BODY=$(echo "$CLOSE_RESPONSE" | sed '$d')
+
+          if [ "$CLOSE_HTTP_CODE" != "204" ]; then
+            echo "Failed to close Case (HTTP ${CLOSE_HTTP_CODE}):"
+            echo "$CLOSE_BODY" | jq . 2>/dev/null || echo "$CLOSE_BODY"
+            exit 1
+          fi
+
+          echo "Case closed: ${CASE_ID}"
+
       - name: Post failure comment on Case
         if: failure()
         run: |
