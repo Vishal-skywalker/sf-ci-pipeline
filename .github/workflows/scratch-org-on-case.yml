@@ -70,8 +70,7 @@ jobs:
             exit 1
           fi
 
-          echo "SF_ACCESS_TOKEN=$ACCESS_TOKEN" >> "$GITHUB_ENV"
-          echo "SF_INSTANCE_URL=$INSTANCE_URL" >> "$GITHUB_ENV"
+          export SF_ACCESS_TOKEN="$ACCESS_TOKEN"
 
           sf org login access-token \
             --instance-url "$INSTANCE_URL" \
