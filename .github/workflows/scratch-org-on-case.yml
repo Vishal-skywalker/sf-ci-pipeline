@@ -1,0 +1,217 @@
+name: Scratch Org on Case
+
+on:
+  repository_dispatch:
+    types: [scratch-org-request]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: scratch-org-case-${{ github.event.client_payload.case_id }}
+  cancel-in-progress: true
+
+jobs:
+  scratch-org-deploy:
+    runs-on: ubuntu-latest
+    env:
+      CASE_ID: ${{ github.event.client_payload.case_id }}
+      ADMIN_EMAIL: ${{ github.event.client_payload.admin_email }}
+      CREATED_BY_NAME: ${{ github.event.client_payload.created_by_name }}
+      SF_CLIENT_ID: ${{ secrets.SF_CLIENT_ID }}
+      SF_CLIENT_SECRET: ${{ secrets.SF_CLIENT_SECRET }}
+      SF_LOGIN_URL: ${{ secrets.SF_LOGIN_URL }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install Salesforce CLI
+        run: npm install -g @salesforce/cli
+
+      - name: Validate dispatch payload
+        run: |
+          if [ -z "$CASE_ID" ]; then
+            echo "case_id is required in repository_dispatch client_payload."
+            exit 1
+          fi
+
+          if [ -z "$SF_CLIENT_ID" ] || [ -z "$SF_CLIENT_SECRET" ]; then
+            echo "SF_CLIENT_ID and SF_CLIENT_SECRET repository secrets are required."
+            exit 1
+          fi
+
+      - name: Authenticate to Dev Hub (Client Credentials)
+        run: |
+          LOGIN_URL="${SF_LOGIN_URL:-https://login.salesforce.com}"
+
+          RESPONSE=$(curl -sS -X POST "${LOGIN_URL}/services/oauth2/token" \
+            -H "Content-Type: application/x-www-form-urlencoded" \
+            --data-urlencode "grant_type=client_credentials" \
+            --data-urlencode "client_id=${SF_CLIENT_ID}" \
+            --data-urlencode "client_secret=${SF_CLIENT_SECRET}")
+
+          if echo "$RESPONSE" | jq -e '.error' > /dev/null 2>&1; then
+            echo "Client credentials authentication failed:"
+            echo "$RESPONSE" | jq .
+            exit 1
+          fi
+
+          ACCESS_TOKEN=$(echo "$RESPONSE" | jq -r '.access_token')
+          INSTANCE_URL=$(echo "$RESPONSE" | jq -r '.instance_url')
+
+          if [ -z "$ACCESS_TOKEN" ] || [ "$ACCESS_TOKEN" = "null" ]; then
+            echo "No access token returned from Salesforce."
+            exit 1
+          fi
+
+          echo "SF_ACCESS_TOKEN=$ACCESS_TOKEN" >> "$GITHUB_ENV"
+          echo "SF_INSTANCE_URL=$INSTANCE_URL" >> "$GITHUB_ENV"
+
+          sf org login access-token \
+            --instance-url "$INSTANCE_URL" \
+            --alias dev-hub \
+            --set-default-dev-hub \
+            --no-prompt
+
+      - name: Create scratch org
+        id: scratch
+        run: |
+          ALIAS="case-${CASE_ID}-scratch"
+          LOGIN_URL="${SF_LOGIN_URL:-https://login.salesforce.com}"
+
+          jq \
+            --arg email "${ADMIN_EMAIL}" \
+            --arg orgName "case-${CASE_ID}" \
+            '. + {username: $email, orgName: $orgName}' \
+            config/project-scratch-def.json > /tmp/project-scratch-def.json
+
+          sf config set org-capitalize-record-types=true
+
+          sf org create scratch \
+            --definition-file /tmp/project-scratch-def.json \
+            --alias "$ALIAS" \
+            --duration-days 30 \
+            --set-default \
+            --wait 20
+
+          ORG_INFO=$(sf org display --target-org "$ALIAS" --json)
+          USERNAME=$(echo "$ORG_INFO" | jq -r '.result.username')
+
+          PASSWORD=$(sf org generate password \
+            --target-org "$ALIAS" \
+            --length 12 \
+            --complexity 5 \
+            --json | jq -r 'if (.result | type) == "array" then .result[0].password else .result.password end')
+
+          if [ -z "$PASSWORD" ] || [ "$PASSWORD" = "null" ]; then
+            echo "Failed to generate scratch org password."
+            exit 1
+          fi
+
+          echo "alias=$ALIAS" >> "$GITHUB_OUTPUT"
+          echo "username=$USERNAME" >> "$GITHUB_OUTPUT"
+          echo "password=$PASSWORD" >> "$GITHUB_OUTPUT"
+          echo "instance_url=$(echo "$ORG_INFO" | jq -r '.result.instanceUrl')" >> "$GITHUB_OUTPUT"
+          echo "org_id=$(echo "$ORG_INFO" | jq -r '.result.id')" >> "$GITHUB_OUTPUT"
+          echo "login_url=$LOGIN_URL" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy source to scratch org
+        run: |
+          if [ ! -d force-app ]; then
+            echo "No force-app directory found; skipping deploy."
+            exit 0
+          fi
+
+          if [ -z "$(find force-app -type f ! -name '.gitkeep' 2>/dev/null | head -1)" ]; then
+            echo "force-app is empty; skipping deploy."
+            exit 0
+          fi
+
+          sf project deploy start \
+            --source-dir force-app \
+            --target-org "${{ steps.scratch.outputs.alias }}" \
+            --test-level NoTestRun \
+            --wait 30
+
+      - name: Post scratch org details on Case
+        if: success()
+        run: |
+          COMMENT=$(cat <<EOF
+          Scratch org created and deployed for ${CREATED_BY_NAME}.
+
+          Alias: ${{ steps.scratch.outputs.alias }}
+          Username: ${{ steps.scratch.outputs.username }}
+          Password: ${{ steps.scratch.outputs.password }}
+          Instance URL: ${{ steps.scratch.outputs.instance_url }}
+          Org ID: ${{ steps.scratch.outputs.org_id }}
+          Admin Email: ${ADMIN_EMAIL}
+
+          Scratch org expires in 30 days.
+          EOF
+          )
+
+          PAYLOAD=$(jq -n \
+            --arg parentId "$CASE_ID" \
+            --arg commentBody "$COMMENT" \
+            '{ParentId: $parentId, CommentBody: $commentBody, IsPublished: true}')
+
+          RESPONSE=$(curl -sS -X POST \
+            "${SF_INSTANCE_URL}/services/data/v64.0/sobjects/CaseComment" \
+            -H "Authorization: Bearer ${SF_ACCESS_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "$PAYLOAD")
+
+          if echo "$RESPONSE" | jq -e '.[0].errorCode' > /dev/null 2>&1; then
+            echo "Failed to create Case comment:"
+            echo "$RESPONSE" | jq .
+            exit 1
+          fi
+
+          echo "Case comment created: $(echo "$RESPONSE" | jq -r '.id')"
+
+      - name: Post failure comment on Case
+        if: failure()
+        run: |
+          if [ -z "${SF_ACCESS_TOKEN:-}" ]; then
+            LOGIN_URL="${SF_LOGIN_URL:-https://login.salesforce.com}"
+
+            RESPONSE=$(curl -sS -X POST "${LOGIN_URL}/services/oauth2/token" \
+              -H "Content-Type: application/x-www-form-urlencoded" \
+              --data-urlencode "grant_type=client_credentials" \
+              --data-urlencode "client_id=${SF_CLIENT_ID}" \
+              --data-urlencode "client_secret=${SF_CLIENT_SECRET}")
+
+            SF_ACCESS_TOKEN=$(echo "$RESPONSE" | jq -r '.access_token')
+            SF_INSTANCE_URL=$(echo "$RESPONSE" | jq -r '.instance_url')
+            echo "SF_INSTANCE_URL=$SF_INSTANCE_URL" >> "$GITHUB_ENV"
+          fi
+
+          if [ -z "$SF_ACCESS_TOKEN" ] || [ "$SF_ACCESS_TOKEN" = "null" ]; then
+            echo "Unable to authenticate for failure Case comment."
+            exit 1
+          fi
+
+          COMMENT="Scratch org creation or deployment failed for ${CREATED_BY_NAME}. Check the GitHub workflow run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+
+          PAYLOAD=$(jq -n \
+            --arg parentId "$CASE_ID" \
+            --arg commentBody "$COMMENT" \
+            '{ParentId: $parentId, CommentBody: $commentBody, IsPublished: true}')
+
+          RESPONSE=$(curl -sS -X POST \
+            "${SF_INSTANCE_URL}/services/data/v64.0/sobjects/CaseComment" \
+            -H "Authorization: Bearer ${SF_ACCESS_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "$PAYLOAD")
+
+          if echo "$RESPONSE" | jq -e '.[0].errorCode' > /dev/null 2>&1; then
+            echo "Failed to create failure Case comment:"
+            echo "$RESPONSE" | jq .
+            exit 1
+          fi
