@@ -85,9 +85,8 @@ jobs:
           LOGIN_URL="${SF_LOGIN_URL:-https://login.salesforce.com}"
 
           jq \
-            --arg email "${ADMIN_EMAIL}" \
             --arg orgName "case-${CASE_ID}" \
-            '. + {username: $email, orgName: $orgName}' \
+            '. + {orgName: $orgName}' \
             config/project-scratch-def.json > /tmp/project-scratch-def.json
 
           sf config set org-capitalize-record-types=true
@@ -95,6 +94,7 @@ jobs:
           sf org create scratch \
             --definition-file /tmp/project-scratch-def.json \
             --alias "$ALIAS" \
+            --admin-email "${ADMIN_EMAIL}" \
             --duration-days 30 \
             --set-default \
             --wait 20
