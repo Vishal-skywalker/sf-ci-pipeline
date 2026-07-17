@@ -70,6 +70,12 @@ jobs:
             exit 1
           fi
 
+          if [ -z "$INSTANCE_URL" ] || [ "$INSTANCE_URL" = "null" ]; then
+            echo "No instance URL returned from Salesforce."
+            exit 1
+          fi
+          
+          export SF_INSTANCE_URL="$INSTANCE_URL"
           export SF_ACCESS_TOKEN="$ACCESS_TOKEN"
 
           sf org login access-token \
@@ -196,25 +202,6 @@ jobs:
       - name: Post failure comment on Case
         if: failure()
         run: |
-          if [ -z "${SF_ACCESS_TOKEN:-}" ]; then
-            LOGIN_URL="${SF_LOGIN_URL:-https://login.salesforce.com}"
-
-            RESPONSE=$(curl -sS -X POST "${LOGIN_URL}/services/oauth2/token" \
-              -H "Content-Type: application/x-www-form-urlencoded" \
-              --data-urlencode "grant_type=client_credentials" \
-              --data-urlencode "client_id=${SF_CLIENT_ID}" \
-              --data-urlencode "client_secret=${SF_CLIENT_SECRET}")
-
-            SF_ACCESS_TOKEN=$(echo "$RESPONSE" | jq -r '.access_token')
-            SF_INSTANCE_URL=$(echo "$RESPONSE" | jq -r '.instance_url')
-            echo "SF_INSTANCE_URL=$SF_INSTANCE_URL" >> "$GITHUB_ENV"
-          fi
-
-          if [ -z "$SF_ACCESS_TOKEN" ] || [ "$SF_ACCESS_TOKEN" = "null" ]; then
-            echo "Unable to authenticate for failure Case comment."
-            exit 1
-          fi
-
           COMMENT="Scratch org creation or deployment failed for ${CREATED_BY_NAME}. Check the GitHub workflow run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
 
           PAYLOAD=$(jq -n \
