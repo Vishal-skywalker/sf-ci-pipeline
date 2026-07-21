@@ -75,8 +75,13 @@ jobs:
             exit 1
           fi
           
+          # Needed by CLI within this step; note that `export` does not persist across steps.
           export SF_INSTANCE_URL="$INSTANCE_URL"
           export SF_ACCESS_TOKEN="$ACCESS_TOKEN"
+
+          # Persist for subsequent steps (used for Case REST API calls).
+          echo "DEVHUB_INSTANCE_URL=$INSTANCE_URL" >> "$GITHUB_ENV"
+          echo "DEVHUB_ACCESS_TOKEN=$ACCESS_TOKEN" >> "$GITHUB_ENV"
 
           sf org login access-token \
             --instance-url "$INSTANCE_URL" \
@@ -167,8 +172,8 @@ jobs:
             '{ParentId: $parentId, CommentBody: $commentBody, IsPublished: true}')
 
           RESPONSE=$(curl -sS -X POST \
-            "${SF_INSTANCE_URL}/services/data/v64.0/sobjects/CaseComment" \
-            -H "Authorization: Bearer ${SF_ACCESS_TOKEN}" \
+            "${DEVHUB_INSTANCE_URL}/services/data/v64.0/sobjects/CaseComment" \
+            -H "Authorization: Bearer ${DEVHUB_ACCESS_TOKEN}" \
             -H "Content-Type: application/json" \
             -d "$PAYLOAD")
 
@@ -183,8 +188,8 @@ jobs:
           CLOSE_PAYLOAD='{"Status":"Closed"}'
 
           CLOSE_RESPONSE=$(curl -sS -w "\n%{http_code}" -X PATCH \
-            "${SF_INSTANCE_URL}/services/data/v64.0/sobjects/Case/${CASE_ID}" \
-            -H "Authorization: Bearer ${SF_ACCESS_TOKEN}" \
+            "${DEVHUB_INSTANCE_URL}/services/data/v64.0/sobjects/Case/${CASE_ID}" \
+            -H "Authorization: Bearer ${DEVHUB_ACCESS_TOKEN}" \
             -H "Content-Type: application/json" \
             -d "$CLOSE_PAYLOAD")
 
@@ -210,8 +215,8 @@ jobs:
             '{ParentId: $parentId, CommentBody: $commentBody, IsPublished: true}')
 
           RESPONSE=$(curl -sS -X POST \
-            "${SF_INSTANCE_URL}/services/data/v64.0/sobjects/CaseComment" \
-            -H "Authorization: Bearer ${SF_ACCESS_TOKEN}" \
+            "${DEVHUB_INSTANCE_URL}/services/data/v64.0/sobjects/CaseComment" \
+            -H "Authorization: Bearer ${DEVHUB_ACCESS_TOKEN}" \
             -H "Content-Type: application/json" \
             -d "$PAYLOAD")
 
